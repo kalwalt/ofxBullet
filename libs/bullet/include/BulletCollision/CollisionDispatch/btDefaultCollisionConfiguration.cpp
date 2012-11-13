@@ -22,9 +22,7 @@ subject to the following restrictions:
 #include "BulletCollision/CollisionDispatch/btConvexPlaneCollisionAlgorithm.h"
 #include "BulletCollision/CollisionDispatch/btBoxBoxCollisionAlgorithm.h"
 #include "BulletCollision/CollisionDispatch/btSphereSphereCollisionAlgorithm.h"
-#ifdef USE_BUGGY_SPHERE_BOX_ALGORITHM
 #include "BulletCollision/CollisionDispatch/btSphereBoxCollisionAlgorithm.h"
-#endif //USE_BUGGY_SPHERE_BOX_ALGORITHM
 #include "BulletCollision/CollisionDispatch/btSphereTriangleCollisionAlgorithm.h"
 #include "BulletCollision/NarrowPhaseCollision/btGjkEpaPenetrationDepthSolver.h"
 #include "BulletCollision/NarrowPhaseCollision/btMinkowskiPenetrationDepthSolver.h"
@@ -72,13 +70,11 @@ btDefaultCollisionConfiguration::btDefaultCollisionConfiguration(const btDefault
 	
 	mem = btAlignedAlloc(sizeof(btSphereSphereCollisionAlgorithm::CreateFunc),16);
 	m_sphereSphereCF = new(mem) btSphereSphereCollisionAlgorithm::CreateFunc;
-#ifdef USE_BUGGY_SPHERE_BOX_ALGORITHM
 	mem = btAlignedAlloc(sizeof(btSphereBoxCollisionAlgorithm::CreateFunc),16);
 	m_sphereBoxCF = new(mem) btSphereBoxCollisionAlgorithm::CreateFunc;
 	mem = btAlignedAlloc(sizeof(btSphereBoxCollisionAlgorithm::CreateFunc),16);
 	m_boxSphereCF = new (mem)btSphereBoxCollisionAlgorithm::CreateFunc;
 	m_boxSphereCF->m_swapped = true;
-#endif //USE_BUGGY_SPHERE_BOX_ALGORITHM
 
 	mem = btAlignedAlloc(sizeof(btSphereTriangleCollisionAlgorithm::CreateFunc),16);
 	m_sphereTriangleCF = new (mem)btSphereTriangleCollisionAlgorithm::CreateFunc;
@@ -181,12 +177,10 @@ btDefaultCollisionConfiguration::~btDefaultCollisionConfiguration()
 	m_sphereSphereCF->~btCollisionAlgorithmCreateFunc();
 	btAlignedFree( m_sphereSphereCF);
 
-#ifdef USE_BUGGY_SPHERE_BOX_ALGORITHM
 	m_sphereBoxCF->~btCollisionAlgorithmCreateFunc();
 	btAlignedFree( m_sphereBoxCF);
 	m_boxSphereCF->~btCollisionAlgorithmCreateFunc();
 	btAlignedFree( m_boxSphereCF);
-#endif //USE_BUGGY_SPHERE_BOX_ALGORITHM
 
 	m_sphereTriangleCF->~btCollisionAlgorithmCreateFunc();
 	btAlignedFree( m_sphereTriangleCF);
@@ -220,7 +214,6 @@ btCollisionAlgorithmCreateFunc* btDefaultCollisionConfiguration::getCollisionAlg
 	{
 		return	m_sphereSphereCF;
 	}
-#ifdef USE_BUGGY_SPHERE_BOX_ALGORITHM
 	if ((proxyType0 == SPHERE_SHAPE_PROXYTYPE) && (proxyType1==BOX_SHAPE_PROXYTYPE))
 	{
 		return	m_sphereBoxCF;
@@ -230,8 +223,6 @@ btCollisionAlgorithmCreateFunc* btDefaultCollisionConfiguration::getCollisionAlg
 	{
 		return	m_boxSphereCF;
 	}
-#endif //USE_BUGGY_SPHERE_BOX_ALGORITHM
-
 
 	if ((proxyType0 == SPHERE_SHAPE_PROXYTYPE ) && (proxyType1==TRIANGLE_SHAPE_PROXYTYPE))
 	{
@@ -295,4 +286,15 @@ void btDefaultCollisionConfiguration::setConvexConvexMultipointIterations(int nu
 	btConvexConvexAlgorithm::CreateFunc* convexConvex = (btConvexConvexAlgorithm::CreateFunc*) m_convexConvexCreateFunc;
 	convexConvex->m_numPerturbationIterations = numPerturbationIterations;
 	convexConvex->m_minimumPointsPerturbationThreshold = minimumPointsPerturbationThreshold;
+}
+
+void	btDefaultCollisionConfiguration::setPlaneConvexMultipointIterations(int numPerturbationIterations, int minimumPointsPerturbationThreshold)
+{
+	btConvexPlaneCollisionAlgorithm::CreateFunc* cpCF = (btConvexPlaneCollisionAlgorithm::CreateFunc*)m_convexPlaneCF;
+	cpCF->m_numPerturbationIterations = numPerturbationIterations;
+	cpCF->m_minimumPointsPerturbationThreshold = minimumPointsPerturbationThreshold;
+	
+	btConvexPlaneCollisionAlgorithm::CreateFunc* pcCF = (btConvexPlaneCollisionAlgorithm::CreateFunc*)m_planeConvexCF;
+	pcCF->m_numPerturbationIterations = numPerturbationIterations;
+	pcCF->m_minimumPointsPerturbationThreshold = minimumPointsPerturbationThreshold;
 }

@@ -46,6 +46,7 @@ SET(BulletCollision_SRCS
 	CollisionShapes/btConvexHullShape.cpp
 	CollisionShapes/btConvexInternalShape.cpp
 	CollisionShapes/btConvexPointCloudShape.cpp
+	CollisionShapes/btConvexPolyhedron.cpp
 	CollisionShapes/btConvexShape.cpp
 	CollisionShapes/btConvex2dShape.cpp
 	CollisionShapes/btConvexTriangleMeshShape.cpp
@@ -92,6 +93,7 @@ SET(BulletCollision_SRCS
 	NarrowPhaseCollision/btRaycastCallback.cpp
 	NarrowPhaseCollision/btSubSimplexConvexCast.cpp
 	NarrowPhaseCollision/btVoronoiSimplexSolver.cpp
+	NarrowPhaseCollision/btPolyhedralContactClipping.cpp
 )
 
 SET(Root_HDRS
@@ -150,6 +152,7 @@ SET(CollisionShapes_HDRS
 	CollisionShapes/btConvexHullShape.h
 	CollisionShapes/btConvexInternalShape.h
 	CollisionShapes/btConvexPointCloudShape.h
+	CollisionShapes/btConvexPolyhedron.h
 	CollisionShapes/btConvexShape.h
 	CollisionShapes/btConvex2dShape.h
 	CollisionShapes/btConvexTriangleMeshShape.h
@@ -224,6 +227,7 @@ SET(NarrowPhaseCollision_HDRS
 	NarrowPhaseCollision/btSimplexSolverInterface.h
 	NarrowPhaseCollision/btSubSimplexConvexCast.h
 	NarrowPhaseCollision/btVoronoiSimplexSolver.h
+	NarrowPhaseCollision/btPolyhedralContactClipping.h
 )
 
 SET(BulletCollision_HDRS
@@ -262,7 +266,7 @@ DESTINATION ${INCLUDE_INSTALL_DIR}/BulletCollision)
 		IF (APPLE AND BUILD_SHARED_LIBS AND FRAMEWORK)
 			SET_TARGET_PROPERTIES(BulletCollision PROPERTIES FRAMEWORK true)
 		
-			SET_TARGET_PROPERTIES(BulletCollision PROPERTIES PUBLIC_HEADER ${Root_HDRS})
+			SET_TARGET_PROPERTIES(BulletCollision PROPERTIES PUBLIC_HEADER "${Root_HDRS}")
 			# Have to list out sub-directories manually:
 			SET_PROPERTY(SOURCE ${BroadphaseCollision_HDRS} PROPERTY MACOSX_PACKAGE_LOCATION Headers/BroadphaseCollision)
 			SET_PROPERTY(SOURCE ${CollisionDispatch_HDRS} PROPERTY MACOSX_PACKAGE_LOCATION Headers/CollisionDispatch)

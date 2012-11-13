@@ -8,11 +8,12 @@ ${BULLET_PHYSICS_SOURCE_DIR}/src
 
 SET(BulletSoftBodyOpenCLSolvers_SRCS
 	../btSoftBodySolver_OpenCL.cpp
+	../btSoftBodySolver_OpenCLSIMDAware.cpp
 )
 
 SET(BulletSoftBodyOpenCLSolvers_HDRS
 	../btSoftBodySolver_OpenCL.h
-	../../CPU/btSoftBodySolverData.h
+	../../Shared/btSoftBodySolverData.h
 	../btSoftBodySolverVertexData_OpenCL.h
 	../btSoftBodySolverTriangleData_OpenCL.h
 	../btSoftBodySolverLinkData_OpenCL.h

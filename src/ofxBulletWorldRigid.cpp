@@ -41,14 +41,14 @@ void ofxBulletWorldRigid::setup() {
 		btVector3 worldAabbMax(1000,1000,1000);
 		broadphase = new btAxisSweep3 (worldAabbMin, worldAabbMax);
 	}
-	
+
 	if(collisionConfig == NULL)			collisionConfig = new btDefaultCollisionConfiguration();
 	if(dispatcher == NULL)				dispatcher = new btCollisionDispatcher( collisionConfig );
 	if(solver == NULL)					solver = new btSequentialImpulseConstraintSolver;
 	if(world == NULL)					world = new btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collisionConfig );
 	// default gravity //
 	setGravity(ofVec3f(0.f, 9.8f, 0.f));
-	
+
 }
 
 //--------------------------------------------------------------
@@ -56,7 +56,7 @@ void ofxBulletWorldRigid::update() {
 	if(!checkWorld()) return;
 	// should this run on delta time? //
 	world->stepSimulation(1.0f/60.0f, 6 );
-	
+
 	if(bDispatchCollisionEvents) {
 		world->performDiscreteCollisionDetection();
 		checkCollisions();
@@ -91,28 +91,30 @@ void ofxBulletWorldRigid::checkCollisions() {
 	//cout << "numManifolds: " << numManifolds << endl;
 	for (int i = 0; i < numManifolds; i++) {
 		btPersistentManifold* contactManifold =  world->getDispatcher()->getManifoldByIndexInternal(i);
-		btCollisionObject* obA = static_cast<btCollisionObject*>(contactManifold->getBody0());
-		btCollisionObject* obB = static_cast<btCollisionObject*>(contactManifold->getBody1());
-		
+		btCollisionObject* obA = (btCollisionObject*)contactManifold->getBody0();
+		btCollisionObject* obB = (btCollisionObject*)contactManifold->getBody1();
+		//btCollisionObject* obA = static_cast<btCollisionObject*>(contactManifold->getBody0());
+		//btCollisionObject* obB = static_cast<btCollisionObject*>(contactManifold->getBody1());
+
 		int numContacts = contactManifold->getNumContacts();
 		ofxBulletCollisionData cdata;
 		if(numContacts > 0) {
 			cdata.numContactPoints = numContacts;
-			
+
 			cdata.userData1 = (ofxBulletUserData*)obA->getUserPointer();
 			cdata.body1		= btRigidBody::upcast(obA);
-			
+
 			cdata.userData2 = (ofxBulletUserData*)obB->getUserPointer();
 			cdata.body2		= btRigidBody::upcast(obB);
 		}
-		
+
 		for (int j = 0; j < numContacts; j++) {
 			btManifoldPoint& pt = contactManifold->getContactPoint(j);
 			if (pt.getDistance() < 0.f) {
 				const btVector3& ptA = pt.getPositionWorldOnA();
 				const btVector3& ptB = pt.getPositionWorldOnB();
 				const btVector3& normalOnB = pt.m_normalWorldOnB;
-				
+
 				cdata.worldContactPoints1.push_back( ofVec3f(ptA.x(), ptA.y(), ptA.z()) );
 				cdata.worldContactPoints2.push_back( ofVec3f(ptB.x(), ptB.y(), ptB.z()) );
 				cdata.normalsOnShape2.push_back( ofVec3f(normalOnB.x(), normalOnB.y(), normalOnB.z()) );
@@ -123,18 +125,18 @@ void ofxBulletWorldRigid::checkCollisions() {
 		}
 	}
 	//you can un-comment out this line, and then all points are removed
-	//contactManifold->clearManifold();	
-	
+	//contactManifold->clearManifold();
+
 }
 
 //--------------------------------------------------------------
 ofxBulletRaycastData ofxBulletWorldRigid::raycastTest(float a_x, float a_y, short int a_filterMask) {
-	
+
 	ofVec3f castRay = _camera->screenToWorld( ofVec3f(a_x, a_y, 0) );
 	castRay = castRay - _camera->getPosition();
 	castRay.normalize();
 	castRay *= 300;
-	
+
 	return raycastTest( _camera->getPosition(), castRay, a_filterMask);
 }
 
@@ -146,14 +148,14 @@ ofxBulletRaycastData ofxBulletWorldRigid::raycastTest( ofVec3f a_rayStart, ofVec
 		ofLog( OF_LOG_ERROR, "ofxBulletWorldRigid :: raycastTest : must set the camera first!!");
 		return data;
 	}
-	
+
 	btVector3 rayStart( a_rayStart.x, a_rayStart.y, a_rayStart.z );
 	btVector3 rayEnd( a_rayEnd.x, a_rayEnd.y, a_rayEnd.z );
-	
+
 	btCollisionWorld::ClosestRayResultCallback rayCallback( rayStart, rayEnd );
 	rayCallback.m_collisionFilterMask = a_filterMask;
 	world->rayTest( rayStart, rayEnd, rayCallback );
-	
+
 	if (rayCallback.hasHit()) {
 		btRigidBody* body = btRigidBody::upcast(rayCallback.m_collisionObject);
 		if (body) {
@@ -194,7 +196,7 @@ void ofxBulletWorldRigid::checkMousePicking(float a_mousex, float a_mousey) {
 			if (!(cdata.body->isStaticObject() || cdata.body->isKinematicObject()) && bRegisterGrabbing) {
 				_pickedBody = cdata.body; //btRigidBody //
 				_pickedBody->setActivationState( DISABLE_DEACTIVATION );
-				
+
 				btTransform tr;
 				tr.setIdentity();
 				tr.setOrigin(btVector3(cdata.localPivotPos.x, cdata.localPivotPos.y, cdata.localPivotPos.z));
@@ -203,26 +205,26 @@ void ofxBulletWorldRigid::checkMousePicking(float a_mousex, float a_mousey) {
 				dof6->setLinearUpperLimit(btVector3(0,0,0));
 				dof6->setAngularLowerLimit(btVector3(0,0,0));
 				dof6->setAngularUpperLimit(btVector3(0,0,0));
-				
+
 				world->addConstraint(dof6);
 				_pickConstraint = dof6;
-				
+
 				dof6->setParam(BT_CONSTRAINT_STOP_CFM,0.8,0);
 				dof6->setParam(BT_CONSTRAINT_STOP_CFM,0.8,1);
 				dof6->setParam(BT_CONSTRAINT_STOP_CFM,0.8,2);
 				dof6->setParam(BT_CONSTRAINT_STOP_CFM,0.8,3);
 				dof6->setParam(BT_CONSTRAINT_STOP_CFM,0.8,4);
 				dof6->setParam(BT_CONSTRAINT_STOP_CFM,0.8,5);
-				
+
 				dof6->setParam(BT_CONSTRAINT_STOP_ERP,0.1,0);
 				dof6->setParam(BT_CONSTRAINT_STOP_ERP,0.1,1);
 				dof6->setParam(BT_CONSTRAINT_STOP_ERP,0.1,2);
 				dof6->setParam(BT_CONSTRAINT_STOP_ERP,0.1,3);
 				dof6->setParam(BT_CONSTRAINT_STOP_ERP,0.1,4);
 				dof6->setParam(BT_CONSTRAINT_STOP_ERP,0.1,5);
-				
+
 				gOldPickingDist  = ( btVector3(cdata.pickPosWorld.x, cdata.pickPosWorld.y, cdata.pickPosWorld.z) - m_cameraPosition).length();
-				
+
 				//cout << "ofxBulletWorldRigid :: checkMousePicking : adding a mouse constraint" << endl;
 			}
 			//cout << "ofxBulletWorldRigid :: checkMousePicking : selected a body!!!" << endl;
@@ -302,15 +304,15 @@ void ofxBulletWorldRigid::removeMouseConstraint() {
 
 //--------------------------------------------------------------
 void ofxBulletWorldRigid::destroy() {
-	
+
 	cout << "ofxBulletWorldRigid :: destroy : destroy() " << endl;
 	//cleanup in the reverse order of creation/initialization
 	int i;
-	
+
 	//remove/delete constraints
 	if(world != NULL) {
 		removeMouseConstraint();
-		
+
 		cout << "ofxBulletWorldRigid :: destroy : num constraints= " << world->getNumConstraints() << endl;
 		for (i = world->getNumConstraints()-1; i >= 0; i--) {
 			btTypedConstraint* constraint = world->getConstraint(i);
@@ -318,7 +320,7 @@ void ofxBulletWorldRigid::destroy() {
 			delete constraint;
 		}
 	}
-	
+
 	//remove the rigidbodies from the dynamics world and delete them
 	if(world != NULL) {
 		cout << "ofxBulletWorldRigid :: destroy : num collision objects= " << world->getNumCollisionObjects() << endl;
@@ -332,7 +334,7 @@ void ofxBulletWorldRigid::destroy() {
 			delete obj;
 		}
 	}
-	
+
 	if(world != NULL)				delete world; world = NULL;
     if(solver != NULL)				delete solver; solver = NULL;
 	if(dispatcher != NULL)			delete dispatcher; dispatcher = NULL;
@@ -343,7 +345,7 @@ void ofxBulletWorldRigid::destroy() {
 
 //--------------------------------------------------------------
 void ofxBulletWorldRigid::mouseMoved( ofMouseEventArgs &a ) {
-			
+
 }
 
 //--------------------------------------------------------------
@@ -359,18 +361,18 @@ void ofxBulletWorldRigid::mouseDragged( ofMouseEventArgs &a ) {
 			mouseRay.normalize();
 			mouseRay *= 300.f;
 			btVector3 newRayTo(mouseRay.x, mouseRay.y, mouseRay.z);
-			
+
 			btVector3 oldPivotInB = pickCon->getFrameOffsetA().getOrigin();
-			
+
 			btVector3 m_cameraPosition( _camera->getPosition().x, _camera->getPosition().y, _camera->getPosition().z );
 			btVector3 rayFrom = m_cameraPosition;
-			
+
 			btVector3 dir = newRayTo-rayFrom;
 			dir.normalize();
 			dir *= gOldPickingDist;
-			
+
 			btVector3 newPivotB = rayFrom + dir;
-			
+
 			pickCon->getFrameOffsetA().setOrigin(newPivotB);
 		}
 	}
@@ -386,7 +388,7 @@ void ofxBulletWorldRigid::mousePressed( ofMouseEventArgs &a ) {
 //--------------------------------------------------------------
 void ofxBulletWorldRigid::mouseReleased( ofMouseEventArgs &a ) {
 	_bMouseDown = false;
-	
+
 	removeMouseConstraint();
 }
 

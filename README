@@ -1,4 +1,4 @@
-ofxBullet
+ofxBullet with Bullet 2.81
 
 Currently bullet libs are compiled for osx and linux. 
 Linux compatibility thanks to Benjamin Knofe aka benben
@@ -11,8 +11,8 @@ OpenFrameworks - http://www.openframeworks.cc/
 Bullet Physics - http://bulletphysics.org/wordpress/
 
 Supported Versions:
-OpenFrameworks 007 - https://github.com/openframeworks/openFrameworks
-Bullet Physics 2.77 - http://code.google.com/p/bullet/downloads/list
+OpenFrameworks 0072 - https://github.com/openframeworks/openFrameworks
+Bullet Physics 2.81 - http://code.google.com/p/bullet/downloads/list
 
 INSTALLATION (currently libs for osx and linux):
 Move the ofxBullet folder into OpenFrameworks > addons 
@@ -24,3 +24,5 @@ Control bodies, move them, rotate them.
 If you would like to control rigid bodies that will influence others,
 please read
 http://forum.openframeworks.cc/index.php/topic,7954.0.html
+
+sperimental 2.81 version by Kalwalt aka Walter Perdan

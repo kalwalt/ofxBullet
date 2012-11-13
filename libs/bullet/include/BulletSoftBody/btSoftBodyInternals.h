@@ -21,11 +21,12 @@ subject to the following restrictions:
 
 
 #include "LinearMath/btQuickprof.h"
+#include "LinearMath/btPolarDecomposition.h"
 #include "BulletCollision/BroadphaseCollision/btBroadphaseInterface.h"
 #include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
 #include "BulletCollision/CollisionShapes/btConvexInternalShape.h"
 #include "BulletCollision/NarrowPhaseCollision/btGjkEpa2.h"
-
+#include <string.h> //for memset
 //
 // btSymMatrix
 //
@@ -40,7 +41,7 @@ struct btSymMatrix
 	const T&				operator()(int c,int r) const			{ return(store[index(c,r)]); }
 	btAlignedObjectArray<T>	store;
 	int						dim;
-};
+};	
 
 //
 // btSoftBodyCollisionShape
@@ -70,7 +71,7 @@ public:
 	///getAabb returns the axis aligned bounding box in the coordinate frame of the given transform t.
 	virtual void getAabb(const btTransform& t,btVector3& aabbMin,btVector3& aabbMax) const
 	{
-		/* t should be identity, but better be safe than...fast? */
+		/* t is usually identity, except when colliding against btCompoundShape. See Issue 512 */
 		const btVector3	mins=m_body->m_bounds[0];
 		const btVector3	maxs=m_body->m_bounds[1];
 		const btVector3	crns[]={t*btVector3(mins.x(),mins.y(),mins.z()),
@@ -91,7 +92,7 @@ public:
 
 
 	virtual void	setLocalScaling(const btVector3& /*scaling*/)
-	{
+	{		
 		///na
 	}
 	virtual const btVector3& getLocalScaling() const
@@ -172,8 +173,7 @@ public:
 template <typename T>
 static inline void			ZeroInitialize(T& value)
 {
-	static const T	zerodummy = T();
-	value=zerodummy;
+	memset(&value,0,sizeof(T));
 }
 //
 template <typename T>
@@ -320,7 +320,7 @@ static inline btMatrix3x3	ImpulseMatrix(	btScalar dt,
 
 //
 static inline btMatrix3x3	ImpulseMatrix(	btScalar ima,const btMatrix3x3& iia,const btVector3& ra,
-										  btScalar imb,const btMatrix3x3& iib,const btVector3& rb)
+										  btScalar imb,const btMatrix3x3& iib,const btVector3& rb)	
 {
 	return(Add(MassMatrix(ima,iia,ra),MassMatrix(imb,iib,rb)).inverse());
 }
@@ -354,7 +354,7 @@ static inline void			ProjectOrigin(	const btVector3& a,
 	const btVector3	d=b-a;
 	const btScalar	m2=d.length2();
 	if(m2>SIMD_EPSILON)
-	{
+	{	
 		const btScalar	t=Clamp<btScalar>(-btDot(a,d)/m2,0,1);
 		const btVector3	p=a+d*t;
 		const btScalar	l2=p.length2();
@@ -385,7 +385,7 @@ static inline void			ProjectOrigin(	const btVector3& a,
 			if(	(btDot(btCross(a-p,b-p),q)>0)&&
 				(btDot(btCross(b-p,c-p),q)>0)&&
 				(btDot(btCross(c-p,a-p),q)>0))
-			{
+			{			
 				prj=p;
 				sqd=k2;
 			}
@@ -529,11 +529,11 @@ static inline void			ApplyClampedForce(	btSoftBody::Node& n,
 {
 	const btScalar	dtim=dt*n.m_im;
 	if((f*dtim).length2()>n.m_v.length2())
-	{/* Clamp	*/
-		n.m_f-=ProjectOnAxis(n.m_v,f.normalized())/dtim;
+	{/* Clamp	*/ 
+		n.m_f-=ProjectOnAxis(n.m_v,f.normalized())/dtim;						
 	}
 	else
-	{/* Apply	*/
+	{/* Apply	*/ 
 		n.m_f+=f;
 	}
 }
@@ -572,7 +572,7 @@ struct	btEigen
 				const btScalar	w=(a[q][q]-a[p][p])/(2*a[p][q]);
 				const btScalar	z=btFabs(w);
 				const btScalar	t=w/(z*(btSqrt(1+w*w)+z));
-				if(t==t)/* [WARNING] let hope that one does not get thrown aways by some compilers... */
+				if(t==t)/* [WARNING] let hope that one does not get thrown aways by some compilers... */ 
 				{
 					const btScalar	c=1/btSqrt(t*t+1);
 					const btScalar	s=c*t;
@@ -615,32 +615,8 @@ private:
 //
 static inline int			PolarDecompose(	const btMatrix3x3& m,btMatrix3x3& q,btMatrix3x3& s)
 {
-	static const btScalar	half=(btScalar)0.5;
-	static const btScalar	accuracy=(btScalar)0.0001;
-	static const int		maxiterations=16;
-	int						i=0;
-	btScalar				det=0;
-	q	=	Mul(m,1/btVector3(m[0][0],m[1][1],m[2][2]).length());
-	det	=	q.determinant();
-	if(!btFuzzyZero(det))
-	{
-		for(;i<maxiterations;++i)
-		{
-			q=Mul(Add(q,Mul(q.adjoint(),1/det).transpose()),half);
-			const btScalar	ndet=q.determinant();
-			if(Sq(ndet-det)>accuracy) det=ndet; else break;
-		}
-		/* Final orthogonalization	*/
-		Orthogonalize(q);
-		/* Compute 'S'				*/
-		s=q.transpose()*m;
-	}
-	else
-	{
-		q.setIdentity();
-		s.setIdentity();
-	}
-	return(i);
+	static const btPolarDecomposition polar;  
+	return polar.decompose(m, q, s);
 }
 
 //
@@ -667,7 +643,7 @@ struct btSoftColliders
 			threshold	=(btScalar)0;
 		}
 		bool				SolveContact(	const btGjkEpaSolver2::sResults& res,
-			btSoftBody::Body ba,btSoftBody::Body bb,
+			btSoftBody::Body ba,const btSoftBody::Body bb,
 			btSoftBody::CJoint& joint)
 		{
 			if(res.distance<m_margin)
@@ -682,7 +658,7 @@ struct btSoftColliders
 				const btVector3		vrel=va-vb;
 				const btScalar		rvac=btDot(vrel,norm);
 				 btScalar		depth=res.distance-m_margin;
-
+				
 //				printf("depth=%f\n",depth);
 				const btVector3		iv=norm*rvac;
 				const btVector3		fv=vrel-iv;
@@ -697,13 +673,13 @@ struct btSoftColliders
 				joint.m_life		=	0;
 				joint.m_maxlife		=	0;
 				joint.m_split		=	1;
-
+				
 				joint.m_drift		=	depth*norm;
 
 				joint.m_normal		=	norm;
 //				printf("normal=%f,%f,%f\n",res.normal.getX(),res.normal.getY(),res.normal.getZ());
 				joint.m_delete		=	false;
-				joint.m_friction	=	fv.length2()<(-rvac*friction)?1:friction;
+				joint.m_friction	=	fv.length2()<(rvac*friction*rvac*friction)?1:friction;
 				joint.m_massmatrix	=	ImpulseMatrix(	ba.invMass(),ba.invWorldInertia(),joint.m_rpos[0],
 					bb.invMass(),bb.invWorldInertia(),joint.m_rpos[1]);
 
@@ -718,30 +694,30 @@ struct btSoftColliders
 	struct	CollideCL_RS : ClusterBase
 	{
 		btSoftBody*		psb;
+		const btCollisionObjectWrapper*	m_colObjWrap;
 
-		btCollisionObject*	m_colObj;
 		void		Process(const btDbvtNode* leaf)
 		{
 			btSoftBody::Cluster*		cluster=(btSoftBody::Cluster*)leaf->data;
 			btSoftClusterCollisionShape	cshape(cluster);
-
-			const btConvexShape*		rshape=(const btConvexShape*)m_colObj->getCollisionShape();
+			
+			const btConvexShape*		rshape=(const btConvexShape*)m_colObjWrap->getCollisionShape();
 
 			///don't collide an anchored cluster with a static/kinematic object
-			if(m_colObj->isStaticOrKinematicObject() && cluster->m_containsAnchor)
+			if(m_colObjWrap->getCollisionObject()->isStaticOrKinematicObject() && cluster->m_containsAnchor)
 				return;
 
-			btGjkEpaSolver2::sResults	res;
+			btGjkEpaSolver2::sResults	res;		
 			if(btGjkEpaSolver2::SignedDistance(	&cshape,btTransform::getIdentity(),
-				rshape,m_colObj->getInterpolationWorldTransform(),
+				rshape,m_colObjWrap->getWorldTransform(),
 				btVector3(1,0,0),res))
 			{
 				btSoftBody::CJoint	joint;
-				if(SolveContact(res,cluster,m_colObj,joint))//prb,joint))
+				if(SolveContact(res,cluster,m_colObjWrap->getCollisionObject(),joint))//prb,joint))
 				{
 					btSoftBody::CJoint*	pj=new(btAlignedAlloc(sizeof(btSoftBody::CJoint),16)) btSoftBody::CJoint();
 					*pj=joint;psb->m_joints.push_back(pj);
-					if(m_colObj->isStaticOrKinematicObject())
+					if(m_colObjWrap->getCollisionObject()->isStaticOrKinematicObject())
 					{
 						pj->m_erp	*=	psb->m_cfg.kSKHR_CL;
 						pj->m_split	*=	psb->m_cfg.kSK_SPLT_CL;
@@ -754,23 +730,23 @@ struct btSoftColliders
 				}
 			}
 		}
-		void		Process(btSoftBody* ps,btCollisionObject* colOb)
+		void		ProcessColObj(btSoftBody* ps,const btCollisionObjectWrapper* colObWrap)
 		{
 			psb			=	ps;
-			m_colObj			=	colOb;
+			m_colObjWrap			=	colObWrap;
 			idt			=	ps->m_sst.isdt;
-			m_margin		=	m_colObj->getCollisionShape()->getMargin()+psb->getCollisionShape()->getMargin();
+			m_margin		=	m_colObjWrap->getCollisionShape()->getMargin()+psb->getCollisionShape()->getMargin();
 			///Bullet rigid body uses multiply instead of minimum to determine combined friction. Some customization would be useful.
-			friction	=	btMin(psb->m_cfg.kDF,m_colObj->getFriction());
+			friction	=	btMin(psb->m_cfg.kDF,m_colObjWrap->getCollisionObject()->getFriction());
 			btVector3			mins;
 			btVector3			maxs;
 
 			ATTRIBUTE_ALIGNED16(btDbvtVolume)		volume;
-			colOb->getCollisionShape()->getAabb(colOb->getInterpolationWorldTransform(),mins,maxs);
+			colObWrap->getCollisionShape()->getAabb(colObWrap->getWorldTransform(),mins,maxs);
 			volume=btDbvtVolume::FromMM(mins,maxs);
 			volume.Expand(btVector3(1,1,1)*m_margin);
 			ps->m_cdbvt.collideTV(ps->m_cdbvt.m_root,volume,*this);
-		}
+		}	
 	};
 	//
 	// CollideCL_SS
@@ -794,7 +770,7 @@ struct btSoftColliders
 			{
 				btSoftClusterCollisionShape	csa(cla);
 				btSoftClusterCollisionShape	csb(clb);
-				btGjkEpaSolver2::sResults	res;
+				btGjkEpaSolver2::sResults	res;		
 				if(btGjkEpaSolver2::SignedDistance(	&csa,btTransform::getIdentity(),
 					&csb,btTransform::getIdentity(),
 					cla->m_com-clb->m_com,res))
@@ -813,10 +789,10 @@ struct btSoftColliders
 				static int count=0;
 				count++;
 				//printf("count=%d\n",count);
-
+				
 			}
 		}
-		void		Process(btSoftBody* psa,btSoftBody* psb)
+		void		ProcessSoftSoft(btSoftBody* psa,btSoftBody* psb)
 		{
 			idt			=	psa->m_sst.isdt;
 			//m_margin		=	(psa->getCollisionShape()->getMargin()+psb->getCollisionShape()->getMargin())/2;
@@ -825,7 +801,7 @@ struct btSoftColliders
 			bodies[0]	=	psa;
 			bodies[1]	=	psb;
 			psa->m_cdbvt.collideTT(psa->m_cdbvt.m_root,psb->m_cdbvt.m_root,*this);
-		}
+		}	
 	};
 	//
 	// CollideSDF_RS
@@ -841,30 +817,31 @@ struct btSoftColliders
 		{
 			const btScalar			m=n.m_im>0?dynmargin:stamargin;
 			btSoftBody::RContact	c;
+
 			if(	(!n.m_battach)&&
-				psb->checkContact(m_colObj1,n.m_x,m,c.m_cti))
+				psb->checkContact(m_colObj1Wrap,n.m_x,m,c.m_cti))
 			{
 				const btScalar	ima=n.m_im;
 				const btScalar	imb= m_rigidBody? m_rigidBody->getInvMass() : 0.f;
 				const btScalar	ms=ima+imb;
 				if(ms>0)
 				{
-					const btTransform&	wtr=m_rigidBody?m_rigidBody->getInterpolationWorldTransform() : m_colObj1->getWorldTransform();
+					const btTransform&	wtr=m_rigidBody?m_rigidBody->getWorldTransform() : m_colObj1Wrap->getCollisionObject()->getWorldTransform();
 					static const btMatrix3x3	iwiStatic(0,0,0,0,0,0,0,0,0);
 					const btMatrix3x3&	iwi=m_rigidBody?m_rigidBody->getInvInertiaTensorWorld() : iwiStatic;
 					const btVector3		ra=n.m_x-wtr.getOrigin();
 					const btVector3		va=m_rigidBody ? m_rigidBody->getVelocityInLocalPoint(ra)*psb->m_sst.sdt : btVector3(0,0,0);
-					const btVector3		vb=n.m_x-n.m_q;
+					const btVector3		vb=n.m_x-n.m_q;	
 					const btVector3		vr=vb-va;
 					const btScalar		dn=btDot(vr,c.m_cti.m_normal);
 					const btVector3		fv=vr-c.m_cti.m_normal*dn;
-					const btScalar		fc=psb->m_cfg.kDF*m_colObj1->getFriction();
+					const btScalar		fc=psb->m_cfg.kDF*m_colObj1Wrap->getCollisionObject()->getFriction();
 					c.m_node	=	&n;
 					c.m_c0		=	ImpulseMatrix(psb->m_sst.sdt,ima,imb,iwi,ra);
 					c.m_c1		=	ra;
 					c.m_c2		=	ima*psb->m_sst.sdt;
-					c.m_c3		=	fv.length2()<(btFabs(dn)*fc)?0:1-fc;
-					c.m_c4		=	m_colObj1->isStaticOrKinematicObject()?psb->m_cfg.kKHR:psb->m_cfg.kCHR;
+			        c.m_c3		=	fv.length2()<(dn*fc*dn*fc)?0:1-fc;
+					c.m_c4		=	m_colObj1Wrap->getCollisionObject()->isStaticOrKinematicObject()?psb->m_cfg.kKHR:psb->m_cfg.kCHR;
 					psb->m_rcontacts.push_back(c);
 					if (m_rigidBody)
 						m_rigidBody->activate();
@@ -872,7 +849,7 @@ struct btSoftColliders
 			}
 		}
 		btSoftBody*		psb;
-		btCollisionObject*	m_colObj1;
+		const btCollisionObjectWrapper*	m_colObj1Wrap;
 		btRigidBody*	m_rigidBody;
 		btScalar		dynmargin;
 		btScalar		stamargin;
@@ -921,7 +898,7 @@ struct btSoftColliders
 					c.m_cfm[1]		=	mb/ms*psb[1]->m_cfg.kSHR;
 					psb[0]->m_scontacts.push_back(c);
 				}
-			}
+			}	
 		}
 		btSoftBody*		psb[2];
 		btScalar		mrg;
