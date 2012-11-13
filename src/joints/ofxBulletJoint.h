@@ -45,13 +45,20 @@ public:
 	ofVec3f getPositionA() const;
 	ofVec3f getPositionB() const;
 	
+<<<<<<< HEAD
 	void	updatePivotPos( const ofVec3f a_pos, float a_length );
+=======
+	void	updatePivotPos( const ofVec3f $pos, float $length );
+>>>>>>> 06c59fb7eaa9ff98101991c48eef80b4e858786c
 	
 	void	draw();
 	void	drawJointConstraints();
 	
+<<<<<<< HEAD
 	void	remove();
 	
+=======
+>>>>>>> 06c59fb7eaa9ff98101991c48eef80b4e858786c
 protected:
 	void _setDefaults();
 	

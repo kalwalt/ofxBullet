@@ -130,6 +130,7 @@ void ofxBulletWorldRigid::checkCollisions() {
 }
 
 //--------------------------------------------------------------
+<<<<<<< HEAD
 ofxBulletRaycastData ofxBulletWorldRigid::raycastTest(float a_x, float a_y, short int a_filterMask) {
 
 	ofVec3f castRay = _camera->screenToWorld( ofVec3f(a_x, a_y, 0) );
@@ -142,12 +143,16 @@ ofxBulletRaycastData ofxBulletWorldRigid::raycastTest(float a_x, float a_y, shor
 
 //--------------------------------------------------------------
 ofxBulletRaycastData ofxBulletWorldRigid::raycastTest( ofVec3f a_rayStart, ofVec3f a_rayEnd, short int a_filterMask) {
+=======
+ofxBulletRaycastData ofxBulletWorldRigid::raycastTest(float $x, float $y, short int $filterMask) {
+>>>>>>> 06c59fb7eaa9ff98101991c48eef80b4e858786c
 	ofxBulletRaycastData data;
 	data.bHasHit = false;
 	if(_camera == NULL) {
 		ofLog( OF_LOG_ERROR, "ofxBulletWorldRigid :: raycastTest : must set the camera first!!");
 		return data;
 	}
+<<<<<<< HEAD
 
 	btVector3 rayStart( a_rayStart.x, a_rayStart.y, a_rayStart.z );
 	btVector3 rayEnd( a_rayEnd.x, a_rayEnd.y, a_rayEnd.z );
@@ -156,6 +161,20 @@ ofxBulletRaycastData ofxBulletWorldRigid::raycastTest( ofVec3f a_rayStart, ofVec
 	rayCallback.m_collisionFilterMask = a_filterMask;
 	world->rayTest( rayStart, rayEnd, rayCallback );
 
+=======
+	
+	ofVec3f castRay = _camera->screenToWorld( ofVec3f($x, $y, 0) );
+	castRay = castRay - _camera->getPosition();
+	castRay.normalize();
+	castRay *= 300;
+	btVector3 rayTo(castRay.x, castRay.y, castRay.z);
+	btVector3 m_cameraPosition( _camera->getPosition().x, _camera->getPosition().y, _camera->getPosition().z );
+	
+	btCollisionWorld::ClosestRayResultCallback rayCallback( m_cameraPosition, rayTo );
+	rayCallback.m_collisionFilterMask = $filterMask;
+	world->rayTest( m_cameraPosition, rayTo, rayCallback );
+	
+>>>>>>> 06c59fb7eaa9ff98101991c48eef80b4e858786c
 	if (rayCallback.hasHit()) {
 		btRigidBody* body = btRigidBody::upcast(rayCallback.m_collisionObject);
 		if (body) {
@@ -173,8 +192,13 @@ ofxBulletRaycastData ofxBulletWorldRigid::raycastTest( ofVec3f a_rayStart, ofVec
 }
 
 //--------------------------------------------------------------
+<<<<<<< HEAD
 void ofxBulletWorldRigid::enableMousePickingEvents( short int a_filterMask ) {
 	_mouseFilterMask = a_filterMask;
+=======
+void ofxBulletWorldRigid::enableMousePickingEvents( short int $filterMask ) {
+	_mouseFilterMask = $filterMask;
+>>>>>>> 06c59fb7eaa9ff98101991c48eef80b4e858786c
 	bDispatchPickingEvents	= true;
 }
 
@@ -185,8 +209,13 @@ void ofxBulletWorldRigid::disableMousePickingEvents() {
 
 //--------------------------------------------------------------
 // pulled from DemoApplication in the AllBulletDemos project included in the Bullet physics download //
+<<<<<<< HEAD
 void ofxBulletWorldRigid::checkMousePicking(float a_mousex, float a_mousey) {
 	ofxBulletRaycastData data = raycastTest(a_mousex, a_mousey, _mouseFilterMask);
+=======
+void ofxBulletWorldRigid::checkMousePicking(float $mousex, float $mousey) {
+	ofxBulletRaycastData data = raycastTest($mousex, $mousey, _mouseFilterMask);
+>>>>>>> 06c59fb7eaa9ff98101991c48eef80b4e858786c
 	if(data.bHasHit) {
 		ofxBulletMousePickEvent cdata;
 		cdata.setRaycastData(data);
@@ -234,8 +263,13 @@ void ofxBulletWorldRigid::checkMousePicking(float a_mousex, float a_mousey) {
 }
 
 //--------------------------------------------------------------
+<<<<<<< HEAD
 void ofxBulletWorldRigid::enableGrabbing(short int a_filterMask) {
 	_mouseFilterMask = a_filterMask;
+=======
+void ofxBulletWorldRigid::enableGrabbing(short int $filterMask) {
+	_mouseFilterMask = $filterMask;
+>>>>>>> 06c59fb7eaa9ff98101991c48eef80b4e858786c
 	bDispatchPickingEvents = true;
 	bRegisterGrabbing = true;
 }
@@ -304,7 +338,11 @@ void ofxBulletWorldRigid::removeMouseConstraint() {
 
 //--------------------------------------------------------------
 void ofxBulletWorldRigid::destroy() {
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> 06c59fb7eaa9ff98101991c48eef80b4e858786c
 	cout << "ofxBulletWorldRigid :: destroy : destroy() " << endl;
 	//cleanup in the reverse order of creation/initialization
 	int i;

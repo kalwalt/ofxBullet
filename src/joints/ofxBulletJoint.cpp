@@ -40,6 +40,11 @@ void ofxBulletJoint::create( btDiscreteDynamicsWorld* a_world, ofxBulletBaseShap
 	
 	_setDefaults();
 	
+<<<<<<< HEAD
+=======
+	_setDefaults();
+	
+>>>>>>> 06c59fb7eaa9ff98101991c48eef80b4e858786c
 	_bTwoBodies	= true;
 	_bCreated	= true;
 }
@@ -50,6 +55,7 @@ void ofxBulletJoint::create( btDiscreteDynamicsWorld* a_world, ofxBulletBaseShap
 	// we should have these always influenced by the joint, so don't let them go to sleep //
 	a_shape->setActivationState( DISABLE_DEACTIVATION );
 	
+<<<<<<< HEAD
 	btVector3 localPivot	= a_shape->getRigidBody()->getCenterOfMassTransform().inverse() * btVector3(a_pos.x, a_pos.y, a_pos.z);
 	btTransform tr;
 	tr.setIdentity();
@@ -59,6 +65,17 @@ void ofxBulletJoint::create( btDiscreteDynamicsWorld* a_world, ofxBulletBaseShap
 	_setDefaults();
 	
 	_targetPos.set(a_pos.x, a_pos.y, a_pos.z);
+=======
+	btVector3 localPivot	= $shape->getRigidBody()->getCenterOfMassTransform().inverse() * btVector3($pos.x, $pos.y, $pos.z);
+	btTransform tr;
+	tr.setIdentity();
+	tr.setOrigin( localPivot );
+	_joint = new btGeneric6DofConstraint(*$shape->getRigidBody(), tr, false);
+	
+	_setDefaults();
+	
+	_targetPos.set($pos.x, $pos.y, $pos.z);
+>>>>>>> 06c59fb7eaa9ff98101991c48eef80b4e858786c
 	_bTwoBodies = false;
 	_bCreated	= true;
 }
@@ -82,8 +99,13 @@ void ofxBulletJoint::_setDefaults() {
 
 /******************************************************/
 // call these before add() and after create //
+<<<<<<< HEAD
 void ofxBulletJoint::setLinearLowerLimit( ofVec3f a_limit ) {
 	setLinearLowerLimit( a_limit.x, a_limit.y, a_limit.z );
+=======
+void ofxBulletJoint::setLinearLowerLimit( ofVec3f $limit ) {
+	setLinearLowerLimit( $limit.x, $limit.y, $limit.z );
+>>>>>>> 06c59fb7eaa9ff98101991c48eef80b4e858786c
 }
 void ofxBulletJoint::setLinearLowerLimit( float a_x, float a_y, float a_z ) {
 	_joint->setLinearLowerLimit( btVector3(a_x, a_y, a_z) );
@@ -161,12 +183,21 @@ ofVec3f ofxBulletJoint::getPositionB() const {
 }
 
 //--------------------------------------------------------------
+<<<<<<< HEAD
 void ofxBulletJoint::updatePivotPos( const ofVec3f a_pos, float a_length ) {
 	if(!_bCreated) {ofLog(OF_LOG_ERROR, "ofxBulletJoint :: updatePivotPos : must call create() first"); return;}
 	
 	_joint->getFrameOffsetA().setOrigin( btVector3(a_pos.x, a_pos.y, a_pos.z) );
 	
 	_targetPos.set( a_pos.x, a_pos.y, a_pos.z );
+=======
+void ofxBulletJoint::updatePivotPos( const ofVec3f $pos, float $length ) {
+	if(!_bCreated) {ofLog(OF_LOG_ERROR, "ofxBulletJoint :: updatePivotPos : must call create() first"); return;}
+	
+	_joint->getFrameOffsetA().setOrigin( btVector3($pos.x, $pos.y, $pos.z) );
+	
+	_targetPos.set( $pos.x, $pos.y, $pos.z );
+>>>>>>> 06c59fb7eaa9ff98101991c48eef80b4e858786c
 }
 
 //--------------------------------------------------------------

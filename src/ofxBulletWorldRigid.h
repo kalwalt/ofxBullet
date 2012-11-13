@@ -37,22 +37,36 @@ public:
 	void disableCollisionEvents();
 	void checkCollisions();
 	
+<<<<<<< HEAD
 	ofxBulletRaycastData raycastTest(float a_x, float a_y, short int a_filterMask=btBroadphaseProxy::AllFilter);
 	//ofxBulletRaycastData raycastTest( ofVec3f a_castRay, short int a_filterMask=btBroadphaseProxy::AllFilter);
 	ofxBulletRaycastData raycastTest( ofVec3f a_rayStart, ofVec3f a_rayEnd, short int a_filterMask=btBroadphaseProxy::AllFilter);
 	
 	void enableMousePickingEvents( short int a_filterMask=btBroadphaseProxy::AllFilter );
+=======
+	ofxBulletRaycastData raycastTest(float $x, float $y, short int $filterMask=btBroadphaseProxy::AllFilter);
+	
+	void enableMousePickingEvents( short int $filterMask=btBroadphaseProxy::AllFilter );
+>>>>>>> 06c59fb7eaa9ff98101991c48eef80b4e858786c
 	void disableMousePickingEvents();
 	void checkMousePicking(float a_mousex, float a_mousey);
 	
+<<<<<<< HEAD
 	void enableGrabbing( short int a_filterMask=btBroadphaseProxy::DefaultFilter | btBroadphaseProxy::KinematicFilter | btBroadphaseProxy::DebrisFilter | btBroadphaseProxy::SensorTrigger );
+=======
+	void enableGrabbing( short int $filterMask=btBroadphaseProxy::AllFilter );
+>>>>>>> 06c59fb7eaa9ff98101991c48eef80b4e858786c
 	void disableGrabbing();
 	
 	void enableDebugDraw();
 	void drawDebug();
 	
 	bool checkWorld();
+<<<<<<< HEAD
 	void setGravity( ofVec3f a_g );
+=======
+	void setGravity( ofVec3f $g );
+>>>>>>> 06c59fb7eaa9ff98101991c48eef80b4e858786c
 	ofVec3f getGravity();
 	
 	void removeMouseConstraint();
